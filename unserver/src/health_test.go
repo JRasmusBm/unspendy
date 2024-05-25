@@ -1,11 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io"
 	"net/http/httptest"
 	"testing"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,8 +18,14 @@ type HealthResult struct {
 
 func TestHealthCheck(t *testing.T) {
 	t.Run("Returns health as true", func(t *testing.T) {
+		db, err := sql.Open("sqlite3", "./temp_test.db")
+		if err != nil {
+			t.Errorf("%#v", err)
+		}
+
+		defer db.Close()
 		req := httptest.NewRequest("GET", "/health", nil)
-		resp, _ := build_server().Test(req, -1)
+		resp, _ := build_server(db).Test(req, -1)
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 
