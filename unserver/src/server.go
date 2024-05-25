@@ -2,7 +2,7 @@ package main
 
 import "github.com/gofiber/fiber/v2"
 
-func main() {
+func build_server() *fiber.App {
 	app := fiber.New()
 
 	app.Get("/health", func(c *fiber.Ctx) error {
@@ -12,5 +12,9 @@ func main() {
 		})
 	})
 
-	app.Listen(":3000")
+	return app
+}
+
+func main() {
+	build_server().Listen(":3000")
 }
