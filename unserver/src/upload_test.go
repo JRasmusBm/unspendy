@@ -24,6 +24,13 @@ type TransactionSearchResult struct {
 	Data  TransactionSearchResultData `json:"data"`
 }
 
+func NewTransactionSearchResult(transactions []string) TransactionSearchResult {
+	return TransactionSearchResult{
+		Error: false,
+		Data:  TransactionSearchResultData{Transactions: transactions},
+	}
+}
+
 func TestUpload(t *testing.T) {
 	t.Run("Without upload returns empty data", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/transaction", nil)
@@ -36,10 +43,10 @@ func TestUpload(t *testing.T) {
 		fmt.Printf("%#v\n", transaction_search_result)
 
 		assert.Equal(t, nil, err)
-		assert.Equal(t, TransactionSearchResult{
-			Error: false,
-			Data:  TransactionSearchResultData{Transactions: []string{}},
-		}, transaction_search_result)
+		assert.Equal(t,
+			NewTransactionSearchResult([]string{}),
+			transaction_search_result,
+		)
 	})
 
 }
