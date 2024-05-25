@@ -12,6 +12,15 @@ func build_server() *fiber.App {
 		})
 	})
 
+	app.Get("/transaction", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"error": false,
+			"data": fiber.Map{
+				"transactions": []string{},
+			},
+		})
+	})
+
 	return app
 }
 
