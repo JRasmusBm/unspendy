@@ -10,19 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type UploadResult struct {
-	Error bool `json:"error"`
-	Data  bool `json:"data"`
-}
-
-type TransactionSearchResultData struct {
-	Transactions []string `json:"transactions"`
-}
-
-type TransactionSearchResult struct {
-	Error bool                        `json:"error"`
-	Data  TransactionSearchResultData `json:"data"`
-}
 
 func NewTransactionSearchResult(transactions []string) TransactionSearchResult {
 	return TransactionSearchResult{
