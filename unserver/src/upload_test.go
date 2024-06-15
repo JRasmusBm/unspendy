@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func NewTransactionSearchResult(transactions []string) TransactionSearchResult {
+func NewTransactionSearchResult(transactions []Transaction) TransactionSearchResult {
 	return TransactionSearchResult{
 		Error: false,
 		Data:  TransactionSearchResultData{Transactions: transactions},
@@ -34,7 +34,7 @@ func TestUpload(t *testing.T) {
 
 		assert.Equal(t, nil, err)
 		assert.Equal(t,
-			NewTransactionSearchResult([]string{}),
+			NewTransactionSearchResult([]Transaction{}),
 			transaction_search_result,
 		)
 	})
