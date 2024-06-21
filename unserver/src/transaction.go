@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"encoding/csv"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -49,14 +51,40 @@ func migrate_transactions(db *sql.DB) {
 		`)
 }
 
-func save_transaction(db *sql.DB)  {
-	
+func save_transaction(db *sql.DB) {
+
 }
 
-
+func respond_with_error(c *fiber.Ctx, err error) error {
+	return c.Status(400).JSON(fiber.Map{
+		"error":   true,
+		"message": err,
+	})
+}
 
 func register_transaction_routes(app *fiber.App, db *sql.DB) {
+	migrate_transactions(db)
+
 	app.Post("/transaction/upload", func(c *fiber.Ctx) error {
+		file_header, err := c.FormFile("upload")
+		if err != nil {
+			return respond_with_error(c, err)
+		}
+
+		file, err := file_header.Open()
+		defer file.Close()
+		if err != nil {
+			return respond_with_error(c, err)
+		}
+
+		reader := csv.NewReader(file)
+		contents, err := reader.ReadAll()
+		if err != nil {
+			return respond_with_error(c, err)
+		}
+
+		fmt.Printf("%v\n", contents)
+
 		return c.JSON(fiber.Map{
 			"error": false,
 		})
