@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -40,7 +41,6 @@ func TestUpload(t *testing.T) {
 
 		var transaction_search_result TransactionSearchResult
 		json.Unmarshal(body, &transaction_search_result)
-		fmt.Printf("%#v\n", transaction_search_result)
 
 		assert.Equal(t, nil, err)
 		assert.Equal(t,
@@ -54,26 +54,31 @@ func TestUpload(t *testing.T) {
 		defer db.Close()
 
 		csvReader := strings.NewReader(`
-		name,age,city
-		Alice,30,New York
-		Bob,25,Los Angeles
-		`)
+Date
+2024-01-12
+`)
 
+		upload_form_body := new(bytes.Buffer)
+		mw := multipart.NewWriter(upload_form_body)
+		w, err := mw.CreateFormFile("upload", "something.csv")
+		io.Copy(w, csvReader)
+		mw.Close()
 		server := build_server(db)
-		upload_resp, _ := server.Test(httptest.NewRequest("POST", "/transaction/upload", csvReader), -1)
+		upload_req := httptest.NewRequest("POST", "/transaction/upload", upload_form_body)
+		upload_req.Header.Add("Content-Type", mw.FormDataContentType())
+		upload_resp, _ := server.Test(upload_req, -1)
 		upload_status, upload_body := get_result[map[string]bool](upload_resp)
-		fmt.Printf("upload_body: %v\n", upload_body)
-		assert.Equal(t, true, upload_body["error"] )
+
+		assert.Equal(t, false, upload_body["error"], upload_body["message"])
 		assert.Equal(t, 200, upload_status)
 
 		resp, _ := server.Test(httptest.NewRequest("GET", "/transaction", nil), -1)
-	  status, body := get_result[TransactionSearchResult](resp)
-		fmt.Printf("%#v\n", body)
+		status, body := get_result[TransactionSearchResult](resp)
 
-		assert.Equal(t, nil, err)
+		assert.Equal(t, nil, err, err)
 		assert.Equal(t,
 			NewTransactionSearchResult([]Transaction{
-				{transaction_date: "2024-05-13T09:14:22.000Z"},
+				{transaction_date: "2024-01-12"},
 			}),
 			body,
 		)
