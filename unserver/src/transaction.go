@@ -3,6 +3,9 @@ package main
 import (
 	"database/sql"
 	"encoding/csv"
+	"fmt"
+	"log"
+
 	"github.com/google/uuid"
 
 	"github.com/gofiber/fiber/v2"
@@ -34,13 +37,13 @@ type Transaction struct {
 	// )
 }
 
-func migrate_transactions(db *sql.DB) {
-	db.Exec(`
+func migrate_transactions(db *sql.DB) error {
+	_, err := db.Exec(`
 	CREATE TABLE IF NOT EXISTS transactions (
-    id UUID 
-		transaction_date Date
-	);
-		`)
+    id UUID NOT NULL PRIMARY KEY,
+    transaction_date Date
+	);`)
+	return err
 }
 
 func save_transaction(db *sql.DB, t Transaction) error {
@@ -49,6 +52,20 @@ INSERT INTO transactions (id, transaction_date)
 VALUES ($1, $2);
 	`, uuid.New(), t.transaction_date)
 	return err
+}
+
+func search_transactions(db *sql.DB) (result []Transaction, err error) {
+	rows, err := db.Query(`
+	SELECT * FROM transactions;
+	`)
+	defer rows.Close()
+	if err != nil {
+		return result, err
+	}
+
+	rows.Scan(&result)
+
+	return result, err
 }
 
 type TransactionSearchResultData struct {
@@ -60,27 +77,37 @@ type TransactionSearchResult struct {
 	Data  TransactionSearchResultData `json:"data"`
 }
 
-func respond_with_error(c *fiber.Ctx, err error) error {
-	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error":   true,
-		"message": err,
-	})
+type ErrorPayload struct {
+	Error   bool   `json:"error"`
+	Message string `json:"message"`
+}
+
+func wrap_error(err error) ErrorPayload {
+	return ErrorPayload{
+		Error:   true,
+		Message: fmt.Sprintf("error: %v", err),
+	}
 }
 
 func register_transaction_routes(app *fiber.App, db *sql.DB) {
-	migrate_transactions(db)
+	err := migrate_transactions(db)
+
+	if err != nil {
+		log.Fatalf("%v\n", err)
+		panic(err)
+	}
 
 	app.Post("/transaction/upload", func(c *fiber.Ctx) error {
 		file_header, err := c.FormFile("upload")
 
 		if err != nil {
-			return respond_with_error(c, err)
+			return c.Status(fiber.StatusBadRequest).JSON(wrap_error(err))
 		}
 
 		file, err := file_header.Open()
 		defer file.Close()
 		if err != nil {
-			return respond_with_error(c, err)
+			return c.Status(fiber.StatusBadRequest).JSON(wrap_error(err))
 		}
 
 		reader := csv.NewReader(file)
@@ -88,7 +115,7 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 		contents, err := reader.ReadAll()
 
 		if err != nil {
-			return respond_with_error(c, err)
+			return c.Status(fiber.StatusBadRequest).JSON(wrap_error(err))
 		}
 
 		header_row := contents[0]
@@ -106,9 +133,8 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 
 			err := save_transaction(db, t)
 			if err != nil {
-				return respond_with_error(c, err)
+				return c.Status(fiber.StatusInternalServerError).JSON(wrap_error(err))
 			}
-
 		}
 
 		return c.JSON(fiber.Map{
@@ -117,10 +143,16 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 	})
 
 	app.Get("/transaction", func(c *fiber.Ctx) error {
+		result, err := search_transactions(db)
+
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(wrap_error(err))
+		}
+
 		return c.JSON(TransactionSearchResult{
 			Error: false,
 			Data: TransactionSearchResultData{
-				Transactions: []Transaction{},
+				Transactions: result,
 			},
 		})
 	})

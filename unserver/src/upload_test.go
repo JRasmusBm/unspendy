@@ -67,9 +67,9 @@ Date
 		upload_req := httptest.NewRequest("POST", "/transaction/upload", upload_form_body)
 		upload_req.Header.Add("Content-Type", mw.FormDataContentType())
 		upload_resp, _ := server.Test(upload_req, -1)
-		upload_status, upload_body := get_result[map[string]bool](upload_resp)
+		upload_status, upload_body := get_result[ErrorPayload](upload_resp)
 
-		assert.Equal(t, false, upload_body["error"], upload_body["message"])
+		assert.Equal(t, false, upload_body.Error, upload_body.Message)
 		assert.Equal(t, 200, upload_status)
 
 		resp, _ := server.Test(httptest.NewRequest("GET", "/transaction", nil), -1)
