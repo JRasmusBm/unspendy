@@ -101,6 +101,7 @@ func TestUpload(t *testing.T) {
 				"Code",
 				"Debit/credit",
 				"Amount (EUR)",
+				"Transaction type",
 			},
 			{
 				"2024-01-12",
@@ -110,6 +111,7 @@ func TestUpload(t *testing.T) {
 				"this is a code",
 				"Debit",
 				"123,45",
+				"Payment terminal",
 			},
 		})
 
@@ -125,6 +127,7 @@ func TestUpload(t *testing.T) {
 					Code:            "this is a code",
 					IsDebit:         true,
 					AmountInCents:   12345,
+					TransactionType: "Payment terminal",
 				},
 			}),
 			search_result,
@@ -144,6 +147,7 @@ func TestUpload(t *testing.T) {
 				"Tegenrekening",
 				"Af Bij",
 				"Bedrag",
+				"Mutatiesoort",
 			},
 			{
 				"2024-01-12",
@@ -153,6 +157,7 @@ func TestUpload(t *testing.T) {
 				"this is a code",
 				"Bij",
 				"123,45",
+				"Inleg",
 			},
 		})
 
@@ -168,6 +173,7 @@ func TestUpload(t *testing.T) {
 					Code:            "this is a code",
 					IsDebit:         true,
 					AmountInCents:   12345,
+					TransactionType: "Inleg",
 				},
 			}),
 			search_result,
