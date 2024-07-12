@@ -22,9 +22,7 @@ type Transaction struct {
 	IsDebit         bool   `json:"is_debit"`
 	AmountInCents   int    `json:"amount_in_cents"`
 	TransactionType string `json:"transaction_type"`
-	// notifications: str = Field(
-	//     validation_alias=AliasChoices("Notifications", "Mededelingen")
-	// )
+	Notifications   string `json:"notifications"`
 	// resulting_balance_in_cents: int = Field(
 	//     validation_alias=AliasChoices("Resulting balance", "Saldo na mutatie")
 	// )
@@ -41,7 +39,8 @@ func migrate_transactions(db *sql.DB) error {
     code TEXT,
     is_debit BOOLEAN,
 		amount_in_cents INTEGER,
-    transaction_type TEXT
+    transaction_type TEXT,
+    notifications TEXT
 	);`)
 	return err
 }
@@ -57,7 +56,8 @@ INSERT INTO transactions (
 	code,
 	is_debit,
 	amount_in_cents,
-	transaction_type
+	transaction_type,
+	notifications
 ) VALUES (
 		$1,
 		$2,
@@ -67,7 +67,8 @@ INSERT INTO transactions (
 		$6,
 		$7,
 		$8,
-		$9
+		$9,
+		$10
 	);
 	`,
 		uuid.New(),
@@ -79,6 +80,7 @@ INSERT INTO transactions (
 		t.IsDebit,
 		t.AmountInCents,
 		t.TransactionType,
+		t.Notifications,
 	)
 	return err
 }
@@ -93,7 +95,8 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 	code,
 	is_debit,
 	amount_in_cents,
-	transaction_type
+	transaction_type,
+	notifications
 	FROM transactions;
 	`)
 	defer rows.Close()
@@ -114,6 +117,7 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 			&t.IsDebit,
 			&t.AmountInCents,
 			&t.TransactionType,
+			&t.Notifications,
 		)
 
 		if err != nil {
@@ -224,6 +228,10 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 
 				if field_name == "Transaction type" || field_name == "Mutatiesoort" {
 					t.TransactionType = row[i]
+				}
+
+				if field_name == "Notifications" || field_name == "Mededelingen" {
+					t.Notifications = row[i]
 				}
 			}
 
