@@ -17,7 +17,7 @@ type Transaction struct {
 	Account         string `json:"account"`
 	Counterparty    string `json:"counterparty"`
 	Code            string `json:"code"`
-	// is_debit: bool = Field(validation_alias=AliasChoices("Debit/credit", "Af Bij"))
+	IsDebit         bool   `json:"is_debit"`
 	// amount_in_cents: int = Field(
 	//     validation_alias=AliasChoices("Amount (EUR)", "Bedrag")
 	// )
@@ -40,7 +40,8 @@ func migrate_transactions(db *sql.DB) error {
     description TEXT,
     account TEXT,
     counterparty TEXT,
-    code TEXT
+    code TEXT,
+    is_debit BOOLEAN
 	);`)
 	return err
 }
@@ -53,14 +54,16 @@ INSERT INTO transactions (
 	description,
 	account,
 	counterparty,
-	code
+	code,
+	is_debit
 ) VALUES (
 		$1,
 		$2,
 		$3,
 		$4,
 		$5,
-		$6
+		$6,
+		$7
 	);
 	`,
 		uuid.New(),
@@ -69,6 +72,7 @@ INSERT INTO transactions (
 		t.Account,
 		t.Counterparty,
 		t.Code,
+		t.IsDebit,
 	)
 	return err
 }
@@ -80,7 +84,8 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 	description,
 	account,
 	counterparty,
-	code 
+	code,
+	is_debit
 	FROM transactions;
 	`)
 	defer rows.Close()
@@ -98,6 +103,7 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 			&t.Account,
 			&t.Counterparty,
 			&t.Code,
+			&t.IsDebit,
 		)
 
 		if err != nil {
@@ -186,6 +192,10 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 
 				if field_name == "Code" || field_name == "Tegenrekening" {
 					t.Code = row[i]
+				}
+
+				if field_name == "Debit/credit" || field_name == "Af Bij" {
+					t.IsDebit = row[i] == "Debit" || row[i] == "Bij"
 				}
 			}
 
