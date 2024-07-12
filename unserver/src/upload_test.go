@@ -103,6 +103,7 @@ func TestUpload(t *testing.T) {
 				"Amount (EUR)",
 				"Transaction type",
 				"Notifications",
+				"Resulting balance",
 			},
 			{
 				"2024-01-12",
@@ -114,6 +115,7 @@ func TestUpload(t *testing.T) {
 				"123,45",
 				"Payment terminal",
 				"this is a notification",
+				"5123,45",
 			},
 		})
 
@@ -122,15 +124,16 @@ func TestUpload(t *testing.T) {
 		assert.Equal(t,
 			NewTransactionSearchResult([]Transaction{
 				{
-					TransactionDate: "2024-01-12",
-					Description:     "this is a description",
-					Account:         "this is an account",
-					Counterparty:    "this is a counterparty",
-					Code:            "this is a code",
-					IsDebit:         true,
-					AmountInCents:   12345,
-					TransactionType: "Payment terminal",
-					Notifications:   "this is a notification",
+					TransactionDate:  "2024-01-12",
+					Description:      "this is a description",
+					Account:          "this is an account",
+					Counterparty:     "this is a counterparty",
+					Code:             "this is a code",
+					IsDebit:          true,
+					AmountInCents:    12345,
+					TransactionType:  "Payment terminal",
+					Notifications:    "this is a notification",
+					ResultingBalance: 512345,
 				},
 			}),
 			search_result,
@@ -152,6 +155,7 @@ func TestUpload(t *testing.T) {
 				"Bedrag",
 				"Mutatiesoort",
 				"Mededelingen",
+				"Saldo na mutatie",
 			},
 			{
 				"2024-01-12",
@@ -163,6 +167,7 @@ func TestUpload(t *testing.T) {
 				"123,45",
 				"Inleg",
 				"this is a notification",
+				"5123,45",
 			},
 		})
 
@@ -171,15 +176,16 @@ func TestUpload(t *testing.T) {
 		assert.Equal(t,
 			NewTransactionSearchResult([]Transaction{
 				{
-					TransactionDate: "2024-01-12",
-					Description:     "this is a description",
-					Account:         "this is an account",
-					Counterparty:    "this is a counterparty",
-					Code:            "this is a code",
-					IsDebit:         true,
-					AmountInCents:   12345,
-					TransactionType: "Inleg",
-					Notifications:   "this is a notification",
+					TransactionDate:  "2024-01-12",
+					Description:      "this is a description",
+					Account:          "this is an account",
+					Counterparty:     "this is a counterparty",
+					Code:             "this is a code",
+					IsDebit:          true,
+					AmountInCents:    12345,
+					TransactionType:  "Inleg",
+					Notifications:    "this is a notification",
+					ResultingBalance: 512345,
 				},
 			}),
 			search_result,

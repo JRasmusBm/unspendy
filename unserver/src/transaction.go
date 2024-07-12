@@ -14,18 +14,16 @@ import (
 )
 
 type Transaction struct {
-	TransactionDate string `json:"transaction_date"`
-	Description     string `json:"description"`
-	Account         string `json:"account"`
-	Counterparty    string `json:"counterparty"`
-	Code            string `json:"code"`
-	IsDebit         bool   `json:"is_debit"`
-	AmountInCents   int    `json:"amount_in_cents"`
-	TransactionType string `json:"transaction_type"`
-	Notifications   string `json:"notifications"`
-	// resulting_balance_in_cents: int = Field(
-	//     validation_alias=AliasChoices("Resulting balance", "Saldo na mutatie")
-	// )
+	TransactionDate  string `json:"transaction_date"`
+	Description      string `json:"description"`
+	Account          string `json:"account"`
+	Counterparty     string `json:"counterparty"`
+	Code             string `json:"code"`
+	IsDebit          bool   `json:"is_debit"`
+	AmountInCents    int    `json:"amount_in_cents"`
+	TransactionType  string `json:"transaction_type"`
+	Notifications    string `json:"notifications"`
+	ResultingBalance int    `json:"resulting_balance_in_cents"`
 }
 
 func migrate_transactions(db *sql.DB) error {
@@ -40,7 +38,8 @@ func migrate_transactions(db *sql.DB) error {
     is_debit BOOLEAN,
 		amount_in_cents INTEGER,
     transaction_type TEXT,
-    notifications TEXT
+    notifications TEXT,
+		resulting_balance_in_cents INTEGER
 	);`)
 	return err
 }
@@ -57,7 +56,8 @@ INSERT INTO transactions (
 	is_debit,
 	amount_in_cents,
 	transaction_type,
-	notifications
+	notifications,
+	resulting_balance_in_cents
 ) VALUES (
 		$1,
 		$2,
@@ -68,7 +68,8 @@ INSERT INTO transactions (
 		$7,
 		$8,
 		$9,
-		$10
+		$10,
+		$11
 	);
 	`,
 		uuid.New(),
@@ -81,6 +82,7 @@ INSERT INTO transactions (
 		t.AmountInCents,
 		t.TransactionType,
 		t.Notifications,
+		t.ResultingBalance,
 	)
 	return err
 }
@@ -96,7 +98,8 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 	is_debit,
 	amount_in_cents,
 	transaction_type,
-	notifications
+	notifications,
+	resulting_balance_in_cents
 	FROM transactions;
 	`)
 	defer rows.Close()
@@ -118,6 +121,7 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 			&t.AmountInCents,
 			&t.TransactionType,
 			&t.Notifications,
+			&t.ResultingBalance,
 		)
 
 		if err != nil {
@@ -232,6 +236,14 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 
 				if field_name == "Notifications" || field_name == "Mededelingen" {
 					t.Notifications = row[i]
+				}
+
+				if field_name == "Resulting balance" || field_name == "Saldo na mutatie" {
+					value, err := parse_money(row[i])
+					if err != nil {
+						return c.Status(fiber.StatusInternalServerError).JSON(wrap_error(err))
+					}
+					t.ResultingBalance = value
 				}
 			}
 
