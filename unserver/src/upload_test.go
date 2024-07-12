@@ -83,7 +83,7 @@ func TestUpload(t *testing.T) {
 		)
 	})
 
-	t.Run("With upload returns uploaded data", func(t *testing.T) {
+	t.Run("With upload returns data uploaded in English", func(t *testing.T) {
 		server, db := test_server_setup(t)
 		defer db.Close()
 
@@ -102,17 +102,22 @@ Date
 		)
 	})
 
+	t.Run("With upload returns uploaded data uploaded in Dutch", func(t *testing.T) {
+		server, db := test_server_setup(t)
+		defer db.Close()
 
-		resp, _ := server.Test(httptest.NewRequest("GET", "/transaction", nil), -1)
-		status, body := get_result[TransactionSearchResult](resp)
+		run_upload_csv(t, server, `
+Datum
+2024-01-12
+`)
 
-		assert.Equal(t, nil, err, err)
+		search_result := run_search_transactions(t, server)
+
 		assert.Equal(t,
 			NewTransactionSearchResult([]Transaction{
-				{transaction_date: "2024-01-12"},
+				{TransactionDate: "2024-01-12"},
 			}),
-			body,
+			search_result,
 		)
-		assert.Equal(t, 200, status)
 	})
 }

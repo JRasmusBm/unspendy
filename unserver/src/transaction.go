@@ -137,8 +137,8 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 
 			t := Transaction{}
 			for i, field_name := range header_row {
-				if field_name == "Date" {
-					t.transaction_date = row[i]
+				if field_name == "Date" || field_name == "Datum" {
+					t.TransactionDate = row[i]
 				}
 			}
 
