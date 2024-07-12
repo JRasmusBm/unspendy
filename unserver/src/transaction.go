@@ -5,6 +5,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -18,9 +20,7 @@ type Transaction struct {
 	Counterparty    string `json:"counterparty"`
 	Code            string `json:"code"`
 	IsDebit         bool   `json:"is_debit"`
-	// amount_in_cents: int = Field(
-	//     validation_alias=AliasChoices("Amount (EUR)", "Bedrag")
-	// )
+	AmountInCents   int    `json:"amount_in_cents"`
 	// transaction_type: str = Field(
 	//     validation_alias=AliasChoices("Transaction type", "Mutatiesoort")
 	// )
@@ -41,7 +41,8 @@ func migrate_transactions(db *sql.DB) error {
     account TEXT,
     counterparty TEXT,
     code TEXT,
-    is_debit BOOLEAN
+    is_debit BOOLEAN,
+		amount_in_cents INTEGER
 	);`)
 	return err
 }
@@ -55,7 +56,8 @@ INSERT INTO transactions (
 	account,
 	counterparty,
 	code,
-	is_debit
+	is_debit,
+	amount_in_cents
 ) VALUES (
 		$1,
 		$2,
@@ -63,7 +65,8 @@ INSERT INTO transactions (
 		$4,
 		$5,
 		$6,
-		$7
+		$7,
+		$8
 	);
 	`,
 		uuid.New(),
@@ -73,6 +76,7 @@ INSERT INTO transactions (
 		t.Counterparty,
 		t.Code,
 		t.IsDebit,
+		t.AmountInCents,
 	)
 	return err
 }
@@ -85,7 +89,8 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 	account,
 	counterparty,
 	code,
-	is_debit
+	is_debit,
+	amount_in_cents
 	FROM transactions;
 	`)
 	defer rows.Close()
@@ -104,6 +109,7 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 			&t.Counterparty,
 			&t.Code,
 			&t.IsDebit,
+			&t.AmountInCents,
 		)
 
 		if err != nil {
@@ -135,6 +141,11 @@ func wrap_error(err error) ErrorPayload {
 		Error:   true,
 		Message: fmt.Sprintf("error: %v", err),
 	}
+}
+
+func parse_money(value string) (int, error) {
+	result, err := strconv.ParseInt(strings.ReplaceAll(value, ",", ""), 10, 64)
+	return int(result), err
 }
 
 func register_transaction_routes(app *fiber.App, db *sql.DB) {
@@ -196,6 +207,15 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 
 				if field_name == "Debit/credit" || field_name == "Af Bij" {
 					t.IsDebit = row[i] == "Debit" || row[i] == "Bij"
+				}
+
+				if field_name == "Amount (EUR)" || field_name == "Bedrag" {
+					value, err := parse_money(row[i])
+					if err != nil {
+						return c.Status(fiber.StatusInternalServerError).JSON(wrap_error(err))
+					}
+
+					t.AmountInCents = value
 				}
 			}
 

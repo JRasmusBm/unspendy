@@ -100,6 +100,7 @@ func TestUpload(t *testing.T) {
 				"Counterparty",
 				"Code",
 				"Debit/credit",
+				"Amount (EUR)",
 			},
 			{
 				"2024-01-12",
@@ -108,6 +109,7 @@ func TestUpload(t *testing.T) {
 				"this is a counterparty",
 				"this is a code",
 				"Debit",
+				"123,45",
 			},
 		})
 
@@ -122,6 +124,7 @@ func TestUpload(t *testing.T) {
 					Counterparty:    "this is a counterparty",
 					Code:            "this is a code",
 					IsDebit:         true,
+					AmountInCents:   12345,
 				},
 			}),
 			search_result,
@@ -140,6 +143,7 @@ func TestUpload(t *testing.T) {
 				"Rekening naam",
 				"Tegenrekening",
 				"Af Bij",
+				"Bedrag",
 			},
 			{
 				"2024-01-12",
@@ -148,6 +152,7 @@ func TestUpload(t *testing.T) {
 				"this is a counterparty",
 				"this is a code",
 				"Bij",
+				"123,45",
 			},
 		})
 
@@ -162,6 +167,7 @@ func TestUpload(t *testing.T) {
 					Counterparty:    "this is a counterparty",
 					Code:            "this is a code",
 					IsDebit:         true,
+					AmountInCents:   12345,
 				},
 			}),
 			search_result,
