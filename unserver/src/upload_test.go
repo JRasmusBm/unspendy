@@ -93,8 +93,8 @@ func TestUpload(t *testing.T) {
 		defer db.Close()
 
 		run_upload_csv(t, server, [][]string{
-			{"Date", "Name / Description"},
-			{"2024-01-12", "this is a description"},
+			{"Date", "Name / Description", "Account"},
+			{"2024-01-12", "this is a description", "this is an account"},
 		})
 
 		search_result := run_search_transactions(t, server)
@@ -104,6 +104,7 @@ func TestUpload(t *testing.T) {
 				{
 					TransactionDate: "2024-01-12",
 					Description:     "this is a description",
+					Account:     "this is an account",
 				},
 			}),
 			search_result,
@@ -115,8 +116,8 @@ func TestUpload(t *testing.T) {
 		defer db.Close()
 
 		run_upload_csv(t, server, [][]string{
-			{"Datum", "Omschrijving"},
-			{"2024-01-12", "this is a description"},
+			{"Datum", "Omschrijving", "Rekening"},
+			{"2024-01-12", "this is a description", "this is an account"},
 		})
 
 		search_result := run_search_transactions(t, server)
@@ -126,6 +127,7 @@ func TestUpload(t *testing.T) {
 				{
 					TransactionDate: "2024-01-12",
 					Description:     "this is a description",
+					Account:     "this is an account",
 				},
 			}),
 			search_result,

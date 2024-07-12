@@ -14,7 +14,7 @@ import (
 type Transaction struct {
 	TransactionDate string `json:"transaction_date"`
 	Description string `json:"description"`
-	// account: str = Field(validation_alias=AliasChoices("Account", "Rekening"))
+	Account string `json:"account"`
 	// counterparty: str = Field(
 	//     validation_alias=AliasChoices("Counterparty", "Rekening naam")
 	// )
@@ -39,22 +39,23 @@ func migrate_transactions(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS transactions (
     id UUID NOT NULL PRIMARY KEY,
     transaction_date DATE,
-    description TEXT
+    description TEXT,
+    account TEXT
 	);`)
 	return err
 }
 
 func save_transaction(db *sql.DB, t Transaction) error {
 	_, err := db.Exec(`
-INSERT INTO transactions (id, transaction_date, description)
-VALUES ($1, $2, $3);
-	`, uuid.New(), t.TransactionDate, t.Description)
+INSERT INTO transactions (id, transaction_date, description, account)
+VALUES ($1, $2, $3, $4);
+	`, uuid.New(), t.TransactionDate, t.Description, t.Account)
 	return err
 }
 
 func search_transactions(db *sql.DB) ([]Transaction, error) {
 	rows, err := db.Query(`
-	SELECT date(transaction_date), description FROM transactions;
+	SELECT date(transaction_date), description, account FROM transactions;
 	`)
 	defer rows.Close()
 
@@ -65,7 +66,7 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 
 	for rows.Next() {
 		var t Transaction
-		err =rows.Scan(&t.TransactionDate, &t.Description)
+		err =rows.Scan(&t.TransactionDate, &t.Description, &t.Account)
 	
 		if err != nil {
 			return nil, err 
@@ -141,6 +142,10 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 
 				if field_name == "Name / Description" || field_name == "Omschrijving" {
 					t.Description = row[i]
+				}
+
+				if field_name == "Account" || field_name == "Rekening" {
+					t.Account = row[i]
 				}
 			}
 
