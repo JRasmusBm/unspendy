@@ -12,7 +12,7 @@ import (
 )
 
 type Transaction struct {
-	transaction_date string
+	TransactionDate string `json:"transaction_date"`
 	// transaction_date: date = Field(validation_alias=AliasChoices("Date", "Datum"))
 	// description: str = Field(
 	//     validation_alias=AliasChoices("Name / Description", "Omschrijving")
@@ -50,20 +50,31 @@ func save_transaction(db *sql.DB, t Transaction) error {
 	_, err := db.Exec(`
 INSERT INTO transactions (id, transaction_date)
 VALUES ($1, $2);
-	`, uuid.New(), t.transaction_date)
+	`, uuid.New(), t.TransactionDate)
 	return err
 }
 
-func search_transactions(db *sql.DB) (result []Transaction, err error) {
+func search_transactions(db *sql.DB) ([]Transaction, error) {
 	rows, err := db.Query(`
-	SELECT * FROM transactions;
+	SELECT date(transaction_date) FROM transactions;
 	`)
 	defer rows.Close()
+
+	result := make([]Transaction, 0)
 	if err != nil {
 		return result, err
 	}
 
-	rows.Scan(&result)
+	for rows.Next() {
+		var t Transaction
+		err =rows.Scan(&t.TransactionDate)
+	
+		if err != nil {
+			return nil, err 
+		}
+
+		result = append(result, t)
+	}
 
 	return result, err
 }
