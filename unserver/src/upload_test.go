@@ -98,12 +98,14 @@ func TestUpload(t *testing.T) {
 				"Name / Description",
 				"Account",
 				"Counterparty",
+				"Code",
 			},
 			{
 				"2024-01-12",
 				"this is a description",
 				"this is an account",
 				"this is a counterparty",
+				"this is a code",
 			},
 		})
 
@@ -116,6 +118,7 @@ func TestUpload(t *testing.T) {
 					Description:     "this is a description",
 					Account:         "this is an account",
 					Counterparty:    "this is a counterparty",
+					Code: "this is a code",
 				},
 			}),
 			search_result,
@@ -132,12 +135,14 @@ func TestUpload(t *testing.T) {
 				"Omschrijving",
 				"Rekening",
 				"Rekening naam",
+				"Tegenrekening",
 			},
 			{
 				"2024-01-12",
 				"this is a description",
 				"this is an account",
 				"this is a counterparty",
+				"this is a code",
 			},
 		})
 
@@ -150,6 +155,7 @@ func TestUpload(t *testing.T) {
 					Description:     "this is a description",
 					Account:         "this is an account",
 					Counterparty:    "this is a counterparty",
+					Code: "this is a code",
 				},
 			}),
 			search_result,

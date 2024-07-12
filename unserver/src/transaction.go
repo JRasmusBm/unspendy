@@ -16,7 +16,7 @@ type Transaction struct {
 	Description     string `json:"description"`
 	Account         string `json:"account"`
 	Counterparty    string `json:"counterparty"`
-	// code: str = Field(validation_alias=AliasChoices("Code", "Tegenrekening"))
+	Code            string `json:"code"`
 	// is_debit: bool = Field(validation_alias=AliasChoices("Debit/credit", "Af Bij"))
 	// amount_in_cents: int = Field(
 	//     validation_alias=AliasChoices("Amount (EUR)", "Bedrag")
@@ -39,22 +39,49 @@ func migrate_transactions(db *sql.DB) error {
     transaction_date DATE,
     description TEXT,
     account TEXT,
-    counterparty TEXT
+    counterparty TEXT,
+    code TEXT
 	);`)
 	return err
 }
 
 func save_transaction(db *sql.DB, t Transaction) error {
 	_, err := db.Exec(`
-INSERT INTO transactions (id, transaction_date, description, account, counterparty)
-VALUES ($1, $2, $3, $4, $5);
-	`, uuid.New(), t.TransactionDate, t.Description, t.Account, t.Counterparty)
+INSERT INTO transactions (
+	id,
+	transaction_date,
+	description,
+	account,
+	counterparty,
+	code
+) VALUES (
+		$1,
+		$2,
+		$3,
+		$4,
+		$5,
+		$6
+	);
+	`,
+		uuid.New(),
+		t.TransactionDate,
+		t.Description,
+		t.Account,
+		t.Counterparty,
+		t.Code,
+	)
 	return err
 }
 
 func search_transactions(db *sql.DB) ([]Transaction, error) {
 	rows, err := db.Query(`
-	SELECT date(transaction_date), description, account, counterparty FROM transactions;
+	SELECT 
+	date(transaction_date),
+	description,
+	account,
+	counterparty,
+	code 
+	FROM transactions;
 	`)
 	defer rows.Close()
 
@@ -70,6 +97,7 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 			&t.Description,
 			&t.Account,
 			&t.Counterparty,
+			&t.Code,
 		)
 
 		if err != nil {
@@ -154,6 +182,10 @@ func register_transaction_routes(app *fiber.App, db *sql.DB) {
 
 				if field_name == "Counterparty" || field_name == "Rekening naam" {
 					t.Counterparty = row[i]
+				}
+
+				if field_name == "Code" || field_name == "Tegenrekening" {
+					t.Code = row[i]
 				}
 			}
 
