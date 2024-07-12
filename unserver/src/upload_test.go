@@ -16,8 +16,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func run_upload_csv(t *testing.T, server *fiber.App, csv_text string) {
-	csvReader := strings.NewReader(csv_text)
+func run_upload_csv(t *testing.T, server *fiber.App, csv_cells [][]string) {
+	csv_rows := []string{}
+	for _, row := range csv_cells {
+		csv_rows = append(csv_rows, strings.Join(row, ";"))
+	}
+
+	csvReader := strings.NewReader(strings.Join(csv_rows, "\n"))
 	upload_form_body := new(bytes.Buffer)
 	mw := multipart.NewWriter(upload_form_body)
 	w, err := mw.CreateFormFile("upload", "something.csv")
@@ -87,16 +92,19 @@ func TestUpload(t *testing.T) {
 		server, db := test_server_setup(t)
 		defer db.Close()
 
-		run_upload_csv(t, server, `
-Date
-2024-01-12
-`)
+		run_upload_csv(t, server, [][]string{
+			{"Date", "Name / Description"},
+			{"2024-01-12", "this is a description"},
+		})
 
 		search_result := run_search_transactions(t, server)
 
 		assert.Equal(t,
 			NewTransactionSearchResult([]Transaction{
-				{TransactionDate: "2024-01-12"},
+				{
+					TransactionDate: "2024-01-12",
+					Description:     "this is a description",
+				},
 			}),
 			search_result,
 		)
@@ -106,16 +114,19 @@ Date
 		server, db := test_server_setup(t)
 		defer db.Close()
 
-		run_upload_csv(t, server, `
-Datum
-2024-01-12
-`)
+		run_upload_csv(t, server, [][]string{
+			{"Datum", "Omschrijving"},
+			{"2024-01-12", "this is a description"},
+		})
 
 		search_result := run_search_transactions(t, server)
 
 		assert.Equal(t,
 			NewTransactionSearchResult([]Transaction{
-				{TransactionDate: "2024-01-12"},
+				{
+					TransactionDate: "2024-01-12",
+					Description:     "this is a description",
+				},
 			}),
 			search_result,
 		)
