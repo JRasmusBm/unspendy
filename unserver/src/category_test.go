@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,6 +18,29 @@ func NewCategorySearchResult(categories []Category) CategorySearchResult {
 		Error: false,
 		Data:  CategorySearchResultData{Categories: categories},
 	}
+}
+
+func run_create_category(t *testing.T, server *fiber.App, c Category) error {
+	encoded, err := json.Marshal(c)
+	assert.Equal(t, nil, err, fmt.Sprintf("%#v", err))
+
+	req := httptest.NewRequest("POST", "/category", bytes.NewBuffer(encoded))
+	resp, err := server.Test(req, -1)
+	defer resp.Body.Close()
+
+	assert.Equal(t, nil, err, fmt.Sprintf("%#v", err))
+	assert.Equal(t, 200, resp.StatusCode)
+
+	body, err := io.ReadAll(resp.Body)
+	assert.Equal(t, nil, err, fmt.Sprintf("%#v", err))
+
+	var payload ErrorPayload
+	json.Unmarshal(body, &payload)
+
+	assert.Equal(t, false, payload.Error, payload.Message)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	return err
 }
 
 func run_search_categories(t *testing.T, server *fiber.App) (search_result CategorySearchResult) {
@@ -45,6 +69,22 @@ func TestCategory(t *testing.T) {
 
 		assert.Equal(t,
 			NewCategorySearchResult([]Category{}),
+			search_result,
+		)
+	})
+
+	t.Run("Stores uploaded category", func(t *testing.T) {
+		server, db := test_server_setup(t)
+		defer db.Close()
+
+		run_create_category(t, server, Category{})
+		search_result := run_search_categories(t, server)
+
+		assert.NotEmpty(t, search_result.Data.Categories[0].Id)
+		search_result.Data.Categories[0].Id = "override"
+
+		assert.Equal(t,
+			NewCategorySearchResult([]Category{{Id: "override"}}),
 			search_result,
 		)
 	})
