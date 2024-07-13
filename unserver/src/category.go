@@ -11,13 +11,15 @@ import (
 )
 
 type Category struct {
-	Id string `json:"id"`
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 func migrate_categories(db *sql.DB) error {
 	_, err := db.Exec(`
 	CREATE TABLE IF NOT EXISTS categories (
-    id UUID NOT NULL PRIMARY KEY
+    id UUID NOT NULL PRIMARY KEY,
+    name TEXT
 	);`)
 	return err
 }
@@ -25,12 +27,15 @@ func migrate_categories(db *sql.DB) error {
 func save_category(db *sql.DB, c Category) error {
 	_, err := db.Exec(`
 INSERT INTO categories (
-	id
+	id,
+	name
 ) VALUES (
-		$1
+		$1,
+		$2
 	);
 	`,
 		uuid.New(),
+		c.Name,
 	)
 	return err
 }
@@ -38,7 +43,8 @@ INSERT INTO categories (
 func search_categories(db *sql.DB) ([]Category, error) {
 	rows, err := db.Query(`
 	SELECT 
-	id
+	id,
+	name
 	FROM categories;
 	`)
 	defer rows.Close()
@@ -52,6 +58,7 @@ func search_categories(db *sql.DB) ([]Category, error) {
 		var c Category
 		err = rows.Scan(
 			&c.Id,
+			&c.Name,
 		)
 
 		if err != nil {

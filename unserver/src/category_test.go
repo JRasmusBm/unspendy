@@ -73,18 +73,23 @@ func TestCategory(t *testing.T) {
 		)
 	})
 
-	t.Run("Stores uploaded category", func(t *testing.T) {
+	t.Run("Stores created category", func(t *testing.T) {
 		server, db := test_server_setup(t)
 		defer db.Close()
 
-		run_create_category(t, server, Category{})
+		run_create_category(t, server, Category{
+			Name: "The name of the category",
+		})
 		search_result := run_search_categories(t, server)
 
 		assert.NotEmpty(t, search_result.Data.Categories[0].Id)
 		search_result.Data.Categories[0].Id = "override"
 
 		assert.Equal(t,
-			NewCategorySearchResult([]Category{{Id: "override"}}),
+			NewCategorySearchResult([]Category{{
+				Id:   "override",
+				Name: "The name of the category",
+			}}),
 			search_result,
 		)
 	})
