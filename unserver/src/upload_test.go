@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -65,14 +64,6 @@ func NewTransactionSearchResult(transactions []Transaction) TransactionSearchRes
 		Error: false,
 		Data:  TransactionSearchResultData{Transactions: transactions},
 	}
-}
-
-func test_server_setup(t *testing.T) (*fiber.App, *sql.DB) {
-	db, err := sql.Open("sqlite3", ":memory:")
-	assert.Equal(t, nil, err, fmt.Sprintf("%#v", err))
-
-	server := build_server(db)
-	return server, db
 }
 
 func TestUpload(t *testing.T) {

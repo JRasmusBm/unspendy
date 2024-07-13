@@ -17,6 +17,7 @@ func build_server(db *sql.DB) *fiber.App {
 	})
 
 	register_transaction_routes(app, db)
+	register_category_routes(app, db)
 
 	return app
 }
