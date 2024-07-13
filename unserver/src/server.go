@@ -1,8 +1,12 @@
 package main
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"database/sql"
 
-func build_server() *fiber.App {
+	"github.com/gofiber/fiber/v2"
+)
+
+func build_server(db *sql.DB) *fiber.App {
 	app := fiber.New()
 
 	app.Get("/health", func(c *fiber.Ctx) error {
@@ -12,9 +16,15 @@ func build_server() *fiber.App {
 		})
 	})
 
+	register_transaction_routes(app, db)
+
 	return app
 }
 
+func start_server(db *sql.DB) {
+	build_server(db).Listen(":3000")
+}
+
 func main() {
-	build_server().Listen(":3000")
+	with_db("temp.db", start_server)
 }
