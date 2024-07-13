@@ -121,9 +121,13 @@ func TestUpload(t *testing.T) {
 
 		search_result := run_search_transactions(t, server)
 
+		assert.NotEmpty(t, search_result.Data.Transactions[0].Id)
+		search_result.Data.Transactions[0].Id = "override"
+
 		assert.Equal(t,
 			NewTransactionSearchResult([]Transaction{
 				{
+					Id:               "override",
 					TransactionDate:  "2024-01-12",
 					Description:      "this is a description",
 					Account:          "this is an account",
@@ -173,9 +177,13 @@ func TestUpload(t *testing.T) {
 
 		search_result := run_search_transactions(t, server)
 
+		assert.NotEmpty(t, search_result.Data.Transactions[0].Id)
+		search_result.Data.Transactions[0].Id = "override"
+
 		assert.Equal(t,
 			NewTransactionSearchResult([]Transaction{
 				{
+					Id:               "override",
 					TransactionDate:  "2024-01-12",
 					Description:      "this is a description",
 					Account:          "this is an account",

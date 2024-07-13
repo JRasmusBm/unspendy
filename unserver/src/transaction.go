@@ -14,6 +14,7 @@ import (
 )
 
 type Transaction struct {
+	Id  string `json:"id"`
 	TransactionDate  string `json:"transaction_date"`
 	Description      string `json:"description"`
 	Account          string `json:"account"`
@@ -90,6 +91,7 @@ INSERT INTO transactions (
 func search_transactions(db *sql.DB) ([]Transaction, error) {
 	rows, err := db.Query(`
 	SELECT 
+	id,
 	date(transaction_date),
 	description,
 	account,
@@ -112,6 +114,7 @@ func search_transactions(db *sql.DB) ([]Transaction, error) {
 	for rows.Next() {
 		var t Transaction
 		err = rows.Scan(
+			&t.Id,
 			&t.TransactionDate,
 			&t.Description,
 			&t.Account,
